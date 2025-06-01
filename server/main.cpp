@@ -8,20 +8,35 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <algorithm>
+#include <fstream>
 
 std::vector<int> clients;
 std::mutex clients_mutex;
+
+const std::string HISTORY_FILE = "./chat_history.txt";
+
+void send_history(int client_socket) {
+    std::ifstream infile(HISTORY_FILE);
+    std::string line;
+    while (std::getline(infile, line)) {
+        send(client_socket, line.c_str(), line.size(), 0);
+        send(client_socket, "\n", 1, 0);
+    }
+}
 
 void broadcast_message(const std::string &message, int sender_fd) {
     std::lock_guard<std::mutex> lock(clients_mutex);
     for (int client_fd : clients) {
         if (client_fd != sender_fd) {
             send(client_fd, message.c_str(), message.size(), 0);
+            send(client_fd, "\n", 1, 0);
         }
     }
 }
 
 void handle_client(int client_socket) {
+    send_history(client_socket);
+
     char buffer[1024];
     while (true) {
         ssize_t bytes_received = recv(client_socket, buffer, sizeof(buffer) - 1, 0);
@@ -31,8 +46,13 @@ void handle_client(int client_socket) {
         buffer[bytes_received] = '\0';
         std::string msg = buffer;
 
-        // Wyświetlanie wiadomości klienta w konsoli serwera
         std::cout << "Message from client: " << msg << std::endl;
+
+        // Zapisz wiadomość do pliku
+        {
+            std::ofstream outfile(HISTORY_FILE, std::ios::app);
+            outfile << msg << std::endl;
+        }
 
         broadcast_message(msg, client_socket);
     }
