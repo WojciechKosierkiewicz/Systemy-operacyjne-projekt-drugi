@@ -7,7 +7,7 @@
 #include <netinet/in.h>
 #include <chrono>
 #include <iomanip>
-#include <ctime>
+#include <algorithm>
 
 #define SERVER_IP "127.0.0.1"
 #define SERVER_PORT 12345

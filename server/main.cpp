@@ -4,10 +4,10 @@
 #include <mutex>
 #include <string>
 #include <sstream>
-#include <unistd.h>       // close()
+#include <unistd.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
-#include <arpa/inet.h>
+#include <algorithm>
 
 #define PORT 12345
 
