@@ -9,8 +9,6 @@
 #include <netinet/in.h>
 #include <algorithm>
 
-#define PORT 12345
-
 std::vector<int> clients;
 std::mutex clients_mutex;
 
@@ -32,6 +30,10 @@ void handle_client(int client_socket) {
         }
         buffer[bytes_received] = '\0';
         std::string msg = buffer;
+
+        // Wyświetlanie wiadomości klienta w konsoli serwera
+        std::cout << "Message from client: " << msg << std::endl;
+
         broadcast_message(msg, client_socket);
     }
     {
@@ -42,6 +44,10 @@ void handle_client(int client_socket) {
 }
 
 int main() {
+    int port;
+    std::cout << "Enter the port number for the chat server: ";
+    std::cin >> port;
+
     int server_fd = socket(AF_INET, SOCK_STREAM, 0);
     if (server_fd == 0) {
         perror("Socket failed");
@@ -51,7 +57,7 @@ int main() {
     sockaddr_in address;
     address.sin_family = AF_INET;
     address.sin_addr.s_addr = INADDR_ANY;
-    address.sin_port = htons(PORT);
+    address.sin_port = htons(port);
 
     if (bind(server_fd, (struct sockaddr *)&address, sizeof(address)) < 0) {
         perror("Bind failed");
@@ -63,7 +69,7 @@ int main() {
         exit(EXIT_FAILURE);
     }
 
-    std::cout << "Chat server started on port " << PORT << std::endl;
+    std::cout << "Chat server started on port: " << port << std::endl;
 
     while (true) {
         socklen_t addrlen = sizeof(address);

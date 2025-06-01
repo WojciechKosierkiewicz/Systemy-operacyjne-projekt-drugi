@@ -10,7 +10,6 @@
 #include <algorithm>
 
 #define SERVER_IP "127.0.0.1"
-#define SERVER_PORT 12345
 
 void receive_messages(int sock) {
     char buffer[1024];
@@ -26,6 +25,11 @@ void receive_messages(int sock) {
 }
 
 int main() {
+    int port;
+    std::cout << "Podaj port serwera: ";
+    std::cin >> port;
+    std::cin.ignore(); // czyści bufor po cin >> port
+
     int sock = socket(AF_INET, SOCK_STREAM, 0);
     std::string nick;
 
@@ -42,7 +46,7 @@ int main() {
 
     sockaddr_in serv_addr;
     serv_addr.sin_family = AF_INET;
-    serv_addr.sin_port = htons(SERVER_PORT);
+    serv_addr.sin_port = htons(port);
 
     if (inet_pton(AF_INET, SERVER_IP, &serv_addr.sin_addr) <= 0) {
         std::cout << "Invalid address or address not supported\n";
@@ -54,7 +58,7 @@ int main() {
         return 1;
     }
 
-    std::cout << "Connected to chat server at " << SERVER_IP << ":" << SERVER_PORT << std::endl;
+    std::cout << "Connected to chat server at " << SERVER_IP << ":" << port << std::endl;
     std::thread recv_thread(receive_messages, sock);
     std::string message;
     std::string out;
