@@ -4,6 +4,8 @@ name: CMake on a single platform
 
 on:
   push:
+    tags:
+      - 'v*'
     branches: [ "main" ]
   pull_request:
     branches: [ "main" ]
