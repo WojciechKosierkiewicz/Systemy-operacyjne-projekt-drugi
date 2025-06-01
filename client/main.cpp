@@ -26,9 +26,9 @@ void receive_messages(int sock) {
 
 int main() {
     int port;
-    std::cout << "Podaj port serwera: ";
+    std::cout << "Enter server port number: ";
     std::cin >> port;
-    std::cin.ignore(); // czyści bufor po cin >> port
+    std::cin.ignore();
 
     int sock = socket(AF_INET, SOCK_STREAM, 0);
     std::string nick;

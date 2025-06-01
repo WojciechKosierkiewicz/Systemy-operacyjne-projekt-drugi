@@ -13,23 +13,24 @@
 std::vector<int> clients;
 std::mutex clients_mutex;
 
+std::mutex history_mutex;
 const std::string HISTORY_FILE = "./chat_history.txt";
 
 void send_history(int client_socket) {
     std::ifstream infile(HISTORY_FILE);
     std::string line;
     while (std::getline(infile, line)) {
-        send(client_socket, line.c_str(), line.size(), 0);
-        send(client_socket, "\n", 1, 0);
+        std::string msg = line + "\n";
+        send(client_socket, msg.c_str(), msg.size(), 0);
     }
 }
 
 void broadcast_message(const std::string &message, int sender_fd) {
     std::lock_guard<std::mutex> lock(clients_mutex);
+    std::string msg = message ;
     for (int client_fd : clients) {
         if (client_fd != sender_fd) {
-            send(client_fd, message.c_str(), message.size(), 0);
-            send(client_fd, "\n", 1, 0);
+            send(client_fd, msg.c_str(), msg.size(), 0);
         }
     }
 }
@@ -48,10 +49,12 @@ void handle_client(int client_socket) {
 
         std::cout << "Message from client: " << msg << std::endl;
 
-        // Zapisz wiadomość do pliku
         {
+            std::lock_guard<std::mutex> lock(history_mutex);
             std::ofstream outfile(HISTORY_FILE, std::ios::app);
-            outfile << msg << std::endl;
+            if (outfile) {
+                outfile << msg << std::endl;
+            }
         }
 
         broadcast_message(msg, client_socket);
@@ -71,6 +74,12 @@ int main() {
     int server_fd = socket(AF_INET, SOCK_STREAM, 0);
     if (server_fd == 0) {
         perror("Socket failed");
+        exit(EXIT_FAILURE);
+    }
+
+    int opt = 1;
+    if (setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) < 0) {
+        perror("setsockopt");
         exit(EXIT_FAILURE);
     }
 
