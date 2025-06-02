@@ -2,9 +2,14 @@
 # Systemy-operacyjne-projekt-drugi
 ![Alt text](https://media.tenor.com/YQ-r_mFzlm0AAAAM/typing-cat-typing.gif)
 
-Celem naszego projektu było stworzenie prostej aplikacji do chatu. System pozwala na wybranie nicku a potem na odbiór na bierząco komunikacji między innymi użytkownikami. Jedynym działaniem serwera jest utrzymywanie aktualnej listy połączonych urzytkowników i przy wysłaniu przez któregokolwiek z użytkowników wiadomości rozesłanie jej innym.
+Celem projektu było stworzenie prostej aplikacji czatu w architekturze klient-serwer.
+System umożliwia:
+- wybór własnego 'nicku' przez użytkownika,
+- bieżące odbieranie i wysyłanie wiadomości do innych uczestników,
+- serwer zajmuje się utrzymywaniem aktualnej listy połączonych użytkowników oraz rozsyłaniem otrzymywanych wiadomości do wszystkich pozostałych klientów,
+- historia czatu jest zapisywana za pomocą serwera do pliku tekstowego, i rozsyłana każdemu nowo dołączającemu użytkownikowi.
 
-Celem naszego projektu było stworzenie komunikatora lub chatu. System umożliwia użytkownikowi wybór własnego nicku, a następnie pozwala na bieżące odbieranie i wysyłanie wiadomości do innych uczestników rozmowy. Serwer odpowiada jedynie za utrzymywanie aktualnej listy połączonych użytkowników oraz za rozsyłanie otrzymywanych wiadomości do wszystkich pozostałych osób zalogowanych w systemie. Wysłana wiadomość przez Clienta Zwiera w sobie timestamp wysłania przez użytkownika wiadomości oraz jego nazwe.
+Każda wiadomość wysyłana przez klienta zawiera znacznik czasu (timestamp) oraz nazwę użytkownika.
 
 ## Kompilacja projektu
 > **Uwaga:**  
@@ -21,15 +26,23 @@ cmake --build build
 Polecenie to buduje automatycznie binary Clientu i Serweru.
 
 ## Logika działania serwera czatu
-Serwer jest bardzo prostą aplikacją wielowątkową gdzie dla każdego nowego połączenia jest tworzony nowy thread odpowiedzialny za obsługe tego połączenia. Sekcja krytyczna pojawia się w 3 momentach przy tworzeniu nowego threadu dla połączenia przy stracie połączenia oraz przy broadcascie. By uniknąc problemów z tym zwiazanym użyłem mutexów co skutecznie ubezpiecza liste clientów.
+Serwer jest bardzo prostą aplikacją wielowątkową gdzie dla każdego nowego połączenia jest tworzony nowy wątek (thread) odpowiedzialny za obsługe tego połączenia. Sekcja krytyczna pojawia się w 4 momentach:
+- przy tworzeniu nowego threadu dla połączenia,
+- przy stracie połączenia,
+- przy broadcascie,
+- przy zapisie wiadomości z czatu do pliku tekstowego.
+
+By uniknąc problemów z tym zwiazanych użyliśmy mutexów, co skutecznie zabezpiecza listę klientów, jak i stronę serwera.
 ### Podsumowanie działania:
-1. Użytkownik podaje numer portu, na którym ma działać serwer.
-2. Serwer czeka na połączenia klientów.
-3. Każdy klient jest obsługiwany w oddzielnym wątku.
-4. Każda otrzymana wiadomość jest rozsyłana wszystkim pozostałym klientom.
-5. Po rozłączeniu klienta, jest on usuwany z listy aktywnych połączeń.
+1. Przy uruchomieniu serwera, należy podać numer portu na którym ma on działać.
+2. Użytkownik podaje numer portu, na którym ma działać serwer.
+3. Serwer czeka na połączenia klientów.
+4. Każdy klient jest obsługiwany w oddzielnym wątku.
+5. Po dołączeniu klienta jest mu wysyłana historia czatu.
+6. Każda otrzymana wiadomość jest rozsyłana wszystkim pozostałym klientom, oraz wypisywana po stronie serwera w celu monitorowania.
+7. Po rozłączeniu klienta, jest on usuwany z listy aktywnych połączeń.
 
 ## Logika działania clienta
-Klient natomiast unika problemów związanych z wielowątkowościa i jedyne co robi to odczytuje z serwera wiadomości i zwraca ja na wiersz polecenia oraz pozwala na wysłanie swoich wiadomości do serwerowi.
+Klient natomiast unika problemów związanych z wielowątkowością i jedyne co robi, to odczytuje z serwera wiadomości i zwraca ja na wiersz polecenia. Pozwala również na wysłanie swoich wiadomości do serwerowi.
 
 ---
